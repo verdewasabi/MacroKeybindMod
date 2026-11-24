@@ -567,14 +567,12 @@ class MacroModClient : ClientModInitializer {
 
             navigator.stop()
             inputController.releaseAllKeys()
-            engine.host.run(
-                "\$\${ unset(teste); }\$\$",
-                sink,
-                engine.variables
-            )
+
+            val clearedFlags = engine.variables.local.clearFlags() +
+                    engine.variables.shared.clearFlags()
 
             sink.log(
-                "[MacroMod] Parada de emergencia! Scripts interrompidos: $stopped"
+                "[MacroMod] Parada de emergencia! Scripts: $stopped | Flags redefinidas: $clearedFlags"
             )
         }
 

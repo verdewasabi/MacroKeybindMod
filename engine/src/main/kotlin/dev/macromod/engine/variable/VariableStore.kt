@@ -107,6 +107,16 @@ class VariableStore {
 
     fun clearAll() { scalars.clear(); arrays.clear() }
 
+    fun clearFlags(): Int {
+        val before = scalars.size
+
+        scalars.entries.removeIf {
+            it.value is Value.Bool
+        }
+
+        return before - scalars.size
+    }
+
     private fun coerce(type: VarType, value: Value): Value = when (type) {
         VarType.COUNTER -> Value.Num(value.asInt())
         VarType.STRING -> Value.Str(value.asString())
