@@ -52,6 +52,12 @@ class MacroEngine(
 
     private val pending = ArrayList<Pending>()
 
+    fun stopAllMacros(): Int {
+        val count = pending.size
+        pending.clear()
+        return count
+    }
+
     /**
      * Per-key-binding playback state for edge detection + KEYSTATE throttling, identity-keyed so two
      * value-equal bindings don't share state. [wasDown] drives the press/release edges; [lastTriggerMs]

@@ -113,6 +113,15 @@ class FabricInputController : InputController {
      * pressed on the PREVIOUS tick, so each tap lasts one full client tick. Held keys (via
      * [hold]) are untouched. No-op when nothing is queued.
      */
+    fun releaseAllKeys() {
+        for (mapping in keyMap().values) {
+            mapping.setDown(false)
+        }
+
+        pendingRelease.clear()
+        toggledDown.clear()
+    }
+
     fun endClientTick() {
         if (pendingRelease.isEmpty()) return
         for (mapping in pendingRelease) mapping.setDown(false)

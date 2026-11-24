@@ -229,6 +229,8 @@ class MacroModClient : ClientModInitializer {
 
                 val key = file.nameWithoutExtension.uppercase()
 
+                if (key == "F12") continue
+
                 val keyCode = when {
                     key.length == 1 && key[0] in 'A'..'Z' ->
                         key[0].code
@@ -554,11 +556,38 @@ class MacroModClient : ClientModInitializer {
         }
     }
 
+    private var emergencyKeyDown = false
+
+    private fun checkEmergencyStop(): Boolean {
+        val mc = Minecraft.getInstance()
+        val pressed = keyDown(mc, GLFW.GLFW_KEY_F12)
+
+        if (pressed && !emergencyKeyDown) {
+            val stopped = engine.stopAllMacros()
+
+            navigator.stop()
+            inputController.releaseAllKeys()
+            engine.host.run(
+                "\$\${ unset(teste); }\$\$",
+                sink,
+                engine.variables
+            )
+
+            sink.log(
+                "[MacroMod] Parada de emergencia! Scripts interrompidos: $stopped"
+            )
+        }
+
+        emergencyKeyDown = pressed
+        return pressed
+    }
+
     /** The actual per-tick work, wrapped by [wireTick] in a crash backstop. */
     private fun tickOnce() {
         // Release taps from the PREVIOUS tick first, so a key("..") tapped last tick stayed
         // down through this tick's player processing (the player tick polls keyXxx.isDown()
         // before END_CLIENT_TICK fires) and is now let go — a clean one-tick press.
+        if (checkEmergencyStop()) return
         checkMacroReload()
 
         inputController.endClientTick()
