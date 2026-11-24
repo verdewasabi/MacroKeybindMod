@@ -78,6 +78,51 @@ class MacroEngine(
      */
     private val keyStates = java.util.IdentityHashMap<MacroBinding, KeyState>()
 
+    fun replaceCustomMacros(newBindings: List<MacroBinding>): Boolean {
+        val registry = macros
+        val existing = registry.all()
+
+        val oldCustom = existing.filter {
+            it.name.startsWith("custom-")
+        }
+
+        val updated = newBindings.map { new ->
+            oldCustom.firstOrNull {
+                it.name == new.name &&
+                        it.trigger == new.trigger &&
+                        it.script == new.script
+            } ?: new
+        }
+
+        if (oldCustom.size == updated.size &&
+            oldCustom.indices.all {
+                oldCustom[it] === updated[it]
+            }
+        ) {
+            return false
+        }
+
+        for (old in oldCustom) {
+            if (updated.none { it === old }) {
+                keyStates.remove(old)
+            }
+        }
+
+        registry.clear()
+
+        existing.filterNot {
+            it.name.startsWith("custom-")
+        }.forEach {
+            registry.add(it)
+        }
+
+        updated.forEach {
+            registry.add(it)
+        }
+
+        return true
+    }
+
     /**
      * Reused per-tick snapshot buffer for [tickKeys], so the 20Hz input poll allocates nothing once
      * its capacity stabilizes (the old `macros.all()` copy cost 104 B/tick — MacroEngineTickAllocTest).

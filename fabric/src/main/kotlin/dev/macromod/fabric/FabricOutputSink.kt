@@ -77,7 +77,7 @@ class FabricOutputSink(private val logger: Logger) : OutputSink {
         //?} else
         /*val text = TextComponent(message)*/
         // Uniform across 1.16–1.21 under Mojmap: gui (public field) -> getChat() -> addMessage.
-        mc.gui.getChat().addMessage(text)
+        mc.gui?.getChat()?.addMessage(text)
     }
 }
 //?}

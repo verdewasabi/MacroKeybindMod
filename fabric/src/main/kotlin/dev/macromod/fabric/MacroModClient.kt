@@ -197,6 +197,78 @@ class MacroModClient : ClientModInitializer {
     private var prevConfigName = "default" // active config profile (per-server switching)
     //?}
 
+    private var lastMacroReload = System.nanoTime()
+
+    private fun checkMacroReload() {
+        val now = System.nanoTime()
+
+        if (now - lastMacroReload >= 2_000_000_000L) {
+            lastMacroReload = now
+            loadCustomMacros()
+        }
+    }
+
+    private fun loadCustomMacros() {
+        try {
+            val folder = net.fabricmc.loader.api.FabricLoader
+                .getInstance()
+                .configDir
+                .resolve("macromod")
+                .resolve("macros")
+                .toFile()
+
+            folder.mkdirs()
+
+            val files = folder.listFiles()
+                ?.sortedBy { it.name.uppercase() } ?: return
+
+            val customMacros = mutableListOf<MacroBinding>()
+
+            for (file in files) {
+                if (!file.isFile || file.extension.lowercase() != "txt") continue
+
+                val key = file.nameWithoutExtension.uppercase()
+
+                val keyCode = when {
+                    key.length == 1 && key[0] in 'A'..'Z' ->
+                        key[0].code
+
+                    key.length == 1 && key[0] in '0'..'9' ->
+                        key[0].code
+
+                    key.matches(Regex("F([1-9]|1[0-2])")) ->
+                        290 + key.substring(1).toInt() - 1
+
+                    else -> continue
+                }
+
+                try {
+                    val script = file.readText().trim()
+
+                    if (script.isEmpty()) continue
+
+                    customMacros.add(
+                        MacroBinding(
+                            trigger = Trigger.Key(keyCode),
+                            script = script,
+                            name = "custom-$key"
+                        )
+                    )
+
+                } catch (e: Exception) {
+                    logger.warn("Erro ao carregar ${file.name}", e)
+                }
+            }
+
+            if (engine.replaceCustomMacros(customMacros)) {
+                logger.info("Macros atualizados: ${customMacros.size}")
+            }
+
+        } catch (e: Exception) {
+            logger.warn("Erro ao carregar macros personalizados", e)
+        }
+    }
+
     override fun onInitializeClient() {
         logger.info("MacroKeybindMod client initializing")
 
@@ -205,6 +277,7 @@ class MacroModClient : ClientModInitializer {
 
         // Seed demo bindings so the wiring visibly does something in-game.
         seedDemoBindings()
+        loadCustomMacros()
 
         //? if >=1.16 {
         // Expose player state to scripts as %HEALTH% / %XPOS% / ... (env provider).
@@ -486,6 +559,8 @@ class MacroModClient : ClientModInitializer {
         // Release taps from the PREVIOUS tick first, so a key("..") tapped last tick stayed
         // down through this tick's player processing (the player tick polls keyXxx.isDown()
         // before END_CLIENT_TICK fires) and is now let go — a clean one-tick press.
+        checkMacroReload()
+
         inputController.endClientTick()
 
         // Advance navigation: if a goto() is active, this faces the next waypoint and holds
