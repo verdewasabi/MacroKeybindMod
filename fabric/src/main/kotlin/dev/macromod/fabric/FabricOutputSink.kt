@@ -36,6 +36,12 @@ import org.slf4j.Logger
  */
 class FabricOutputSink(private val logger: Logger) : OutputSink {
 
+    //? if >=1.21.11 {
+    override fun clearChat() {
+        val mc = Minecraft.getInstance()
+        mc.gui?.getChat()?.clearMessages(false)
+    }
+
     override fun chat(message: String) {
         val mc = Minecraft.getInstance()
         val player = mc.player
