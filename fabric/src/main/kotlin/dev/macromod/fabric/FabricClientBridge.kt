@@ -41,7 +41,20 @@ class FabricClientBridge(
 
     override val world = object : WorldActions {
         override fun respawn() { Minecraft.getInstance().player?.respawn() }
-        override fun disconnect() { feedback("[world] disconnect requested") }
+        override fun disconnect() {
+            //? if >=1.21.11 {
+            val mc = Minecraft.getInstance()
+
+            if (mc.level == null) return
+
+            mc.disconnectFromWorld(
+                Component.literal("Disconnected by MacroKeybindMod")
+            )
+            //?}
+            //? if <1.21.11 {
+            /*feedback("[world] disconnect requested")*/
+            //?}
+        }
         // Live client-side playback: resolve the id to a SoundEvent and play it through the player.
         // playSound(SoundEvent, vol, pitch) is stable across 1.16→1.21; only id→SoundEvent churns.
         override fun playSound(sound: String) {
