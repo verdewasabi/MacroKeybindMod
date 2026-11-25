@@ -229,7 +229,7 @@ class MacroModClient : ClientModInitializer {
 
                 val key = file.nameWithoutExtension.uppercase()
 
-                if (key == "F12") continue
+                if (key == "F12" || key == "F10") continue
 
                 val keyCode = when {
                     key.length == 1 && key[0] in 'A'..'Z' ->
@@ -444,97 +444,97 @@ class MacroModClient : ClientModInitializer {
         // branch is written uncommented here (source-of-truth) and the MISC branch is the
         // commented one. Stonecutter flips these per target version at generation time.
         //? if >=1.21.9 {
-        /*val mapping = KeyMapping(
-            "key.macromod.demo",
-            InputConstants.Type.KEYSYM,
-            demoKeyCode,
-            KeyMapping.Category.MISC,
-        )*/
-        //?}
-        //? if <1.21.9 {
         val mapping = KeyMapping(
             "key.macromod.demo",
             InputConstants.Type.KEYSYM,
             demoKeyCode,
-            "category.macromod",
+            KeyMapping.Category.MISC,
         )
         //?}
+        //? if <1.21.9 {
+        /*val mapping = KeyMapping(
+            "key.macromod.demo",
+            InputConstants.Type.KEYSYM,
+            demoKeyCode,
+            "category.macromod",
+        )
+        *///?}
         demoKey = KeyBindingHelper.registerKeyBinding(mapping)
 
         // The navigation demo key (G) — same per-version category split as above.
         //? if >=1.21.9 {
-        /*val navMapping = KeyMapping(
-            "key.macromod.goto",
-            InputConstants.Type.KEYSYM,
-            navKeyCode,
-            KeyMapping.Category.MISC,
-        )*/
-        //?}
-        //? if <1.21.9 {
         val navMapping = KeyMapping(
             "key.macromod.goto",
             InputConstants.Type.KEYSYM,
             navKeyCode,
-            "category.macromod",
+            KeyMapping.Category.MISC,
         )
         //?}
+        //? if <1.21.9 {
+        /*val navMapping = KeyMapping(
+            "key.macromod.goto",
+            InputConstants.Type.KEYSYM,
+            navKeyCode,
+            "category.macromod",
+        )
+        *///?}
         navKey = KeyBindingHelper.registerKeyBinding(navMapping)
 
         // The GUI key (RIGHT_SHIFT) — same per-version category split as the keys above.
         //? if >=1.21.9 {
-        /*val guiMapping = KeyMapping(
-            "key.macromod.gui",
-            InputConstants.Type.KEYSYM,
-            guiKeyCode,
-            KeyMapping.Category.MISC,
-        )*/
-        //?}
-        //? if <1.21.9 {
         val guiMapping = KeyMapping(
             "key.macromod.gui",
             InputConstants.Type.KEYSYM,
             guiKeyCode,
-            "category.macromod",
+            KeyMapping.Category.MISC,
         )
         //?}
+        //? if <1.21.9 {
+        /*val guiMapping = KeyMapping(
+            "key.macromod.gui",
+            InputConstants.Type.KEYSYM,
+            guiKeyCode,
+            "category.macromod",
+        )
+        *///?}
         guiKey = KeyBindingHelper.registerKeyBinding(guiMapping)
 
         // The auto-reconnect toggle key (numpad 5) — same per-version category split as above.
         //? if >=1.21.9 {
-        /*val reconnectMapping = KeyMapping(
-            "key.macromod.autoreconnect",
-            InputConstants.Type.KEYSYM,
-            autoReconnectKeyCode,
-            KeyMapping.Category.MISC,
-        )*/
-        //?}
-        //? if <1.21.9 {
         val reconnectMapping = KeyMapping(
             "key.macromod.autoreconnect",
             InputConstants.Type.KEYSYM,
             autoReconnectKeyCode,
-            "category.macromod",
+            KeyMapping.Category.MISC,
         )
         //?}
+        //? if <1.21.9 {
+        /*val reconnectMapping = KeyMapping(
+            "key.macromod.autoreconnect",
+            InputConstants.Type.KEYSYM,
+            autoReconnectKeyCode,
+            "category.macromod",
+        )
+        *///?}
         autoReconnectKey = KeyBindingHelper.registerKeyBinding(reconnectMapping)
 
         // The REPL console key (numpad 6) — same per-version category split as above.
         //? if >=1.21.9 {
-        /*val replMapping = KeyMapping(
+        val replMapping = KeyMapping(
             "key.macromod.repl",
             InputConstants.Type.KEYSYM,
             replKeyCode,
             KeyMapping.Category.MISC,
-        )*/
+        )
         //?}
         //? if <1.21.9 {
-        val replMapping = KeyMapping(
+        /*val replMapping = KeyMapping(
             "key.macromod.repl",
             InputConstants.Type.KEYSYM,
             replKeyCode,
             "category.macromod",
         )
-        //?}
+        *///?}
         replKey = KeyBindingHelper.registerKeyBinding(replMapping)
     }
 
@@ -580,6 +580,33 @@ class MacroModClient : ClientModInitializer {
         return pressed
     }
 
+    private var managerKeyDown = false
+
+    private fun checkMacroManager() {
+        val mc = Minecraft.getInstance()
+        val pressed = keyDown(mc, GLFW.GLFW_KEY_F10)
+
+        if (pressed && !managerKeyDown) {
+            if (mc.player != null && mc.screen == null) {
+                mc.setScreen(
+                    dev.macromod.fabric.ui.MacroManagerScreen(
+                        getMacroNames = {
+                            engine.macros.all()
+                                .filter { it.name.startsWith("custom-") }
+                                .map { it.name.removePrefix("custom-") }
+                                .sorted()
+                        },
+                        reloadMacros = {
+                            loadCustomMacros()
+                        }
+                    )
+                )
+            }
+        }
+
+        managerKeyDown = pressed
+    }
+
     /** The actual per-tick work, wrapped by [wireTick] in a crash backstop. */
     private fun tickOnce() {
         // Release taps from the PREVIOUS tick first, so a key("..") tapped last tick stayed
@@ -587,6 +614,7 @@ class MacroModClient : ClientModInitializer {
         // before END_CLIENT_TICK fires) and is now let go — a clean one-tick press.
         if (checkEmergencyStop()) return
         checkMacroReload()
+        checkMacroManager()
 
         inputController.endClientTick()
 
@@ -745,11 +773,11 @@ class MacroModClient : ClientModInitializer {
 
             // selected hotbar slot (accessor privatised at 1.21.5)
             //? if >=1.21.5 {
-            /*val slot = player.inventory.getSelectedSlot()*/
+            val slot = player.inventory.getSelectedSlot()
             //?}
             //? if <1.21.5 {
-            val slot = player.inventory.selected
-            //?}
+            /*val slot = player.inventory.selected
+            *///?}
             // emit 1-based slots so the event OLDINVSLOT/INVSLOT match a normal %INVSLOT% read
             if (prevSlot >= 0 && slot != prevSlot) fireChange("onInventorySlotChange", "INVSLOT", prevSlot + 1, slot + 1)
             prevSlot = slot
@@ -1123,11 +1151,11 @@ class MacroModClient : ClientModInitializer {
                 // ResourceKey's accessor was renamed location() -> identifier() at 1.21.11
                 // (along with ResourceLocation -> Identifier). Source-of-truth 1.21.1 (<1.21.11).
                 //? if >=1.21.11 {
-                /*"DIMENSION" -> Value.Str(mc.level?.dimension()?.identifier()?.toString() ?: "")*/
+                "DIMENSION" -> Value.Str(mc.level?.dimension()?.identifier()?.toString() ?: "")
                 //?}
                 //? if <1.21.11 {
-                "DIMENSION" -> Value.Str(mc.level?.dimension()?.location()?.toString() ?: "")
-                //?}
+                /*"DIMENSION" -> Value.Str(mc.level?.dimension()?.location()?.toString() ?: "")
+                *///?}
                 "DIFFICULTY" -> Value.Str(mc.level?.difficulty?.name ?: "")
                 "LOCALDIFFICULTY" -> Value.Num(localDifficulty(mc, player))
                 // held item (extended): registry id + durability
@@ -1431,11 +1459,11 @@ class MacroModClient : ClientModInitializer {
         //? if >=1.18.2 {
         val holder = level.getBiome(player.blockPosition())
         //? if >=1.21.11 {
-        /*return holder.unwrapKey().map { it.identifier().toString() }.orElse("")*/
+        return holder.unwrapKey().map { it.identifier().toString() }.orElse("")
         //?}
         //? if <1.21.11 {
-        return holder.unwrapKey().map { it.location().toString() }.orElse("")
-        //?}
+        /*return holder.unwrapKey().map { it.location().toString() }.orElse("")
+        *///?}
         //?}
         //? if <1.18.2 {
         /*return ""*/
@@ -1532,11 +1560,11 @@ class MacroModClient : ClientModInitializer {
     // The GLFW window handle. Window's accessor was renamed getWindow() -> handle() at 1.21.9.
     private fun windowHandle(mc: Minecraft): Long {
         //? if >=1.21.9 {
-        /*return mc.window.handle()*/
+        return mc.window.handle()
         //?}
         //? if <1.21.9 {
-        return mc.window.window
-        //?}
+        /*return mc.window.window
+        *///?}
     }
 
     // Input-state helpers (GLFW directly, avoiding the InputConstants.isKeyDown long->Window churn).
@@ -1589,11 +1617,11 @@ class MacroModClient : ClientModInitializer {
      */
     private fun currentFps(mc: Minecraft): Int {
         //? if >=1.21.9 {
-        /*return mc.fps*/
+        return mc.fps
         //?}
         //? if <1.21.9 {
-        return mc.fpsString.trim().takeWhile { it.isDigit() }.toIntOrNull() ?: 0
-        //?}
+        /*return mc.fpsString.trim().takeWhile { it.isDigit() }.toIntOrNull() ?: 0
+        *///?}
     }
 
     /**
@@ -1610,11 +1638,11 @@ class MacroModClient : ClientModInitializer {
         // tick-exact like itemUsePct/bowCharge. MKB passes its render partialTicks
         // (VariableProviderPlayer.java:234), which has no analogue in a per-tick script context.
         //? if >=1.21.2 {
-        /*return Math.round(player.cooldowns.getCooldownPercent(stack, 0.0f) * 100f)*/
+        return Math.round(player.cooldowns.getCooldownPercent(stack, 0.0f) * 100f)
         //?}
         //? if <1.21.2 {
-        return Math.round(player.cooldowns.getCooldownPercent(stack.item, 0.0f) * 100f)
-        //?}
+        /*return Math.round(player.cooldowns.getCooldownPercent(stack.item, 0.0f) * 100f)
+        *///?}
     }
 
     /**
@@ -1663,11 +1691,11 @@ class MacroModClient : ClientModInitializer {
      */
     private fun localDifficulty(mc: Minecraft, player: net.minecraft.world.entity.player.Player): Int {
         //? if <1.21.11 {
-        val level = mc.level ?: return 0
+        /*val level = mc.level ?: return 0
         return (level.getCurrentDifficultyAt(player.blockPosition()).getEffectiveDifficulty() * 100f).toInt()
-        //?}
+        *///?}
         //? if >=1.21.11 {
-        /*return 0*/
+        return 0
         //?}
     }
 
@@ -1715,11 +1743,11 @@ class MacroModClient : ClientModInitializer {
     // Selected hotbar slot (0-8); the `selected` field was privatised at 1.21.5 in favour of getSelectedSlot().
     private fun selectedSlot(player: net.minecraft.world.entity.player.Player): Int {
         //? if >=1.21.5 {
-        /*return player.inventory.getSelectedSlot()*/
+        return player.inventory.getSelectedSlot()
         //?}
         //? if <1.21.5 {
-        return player.inventory.selected
-        //?}
+        /*return player.inventory.selected
+        *///?}
     }
     //?}
 }

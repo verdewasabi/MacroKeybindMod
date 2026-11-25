@@ -84,6 +84,12 @@ tasks {
         // NOTE: inside this task-configuration block `this` is the task, so use
         // `project.property(...)` — a bare `property(...)` resolves against the task.
         val props = mapOf(
+            "macro_mixins" to (
+                    if (stonecutter.current.version == "1.21.11")
+                        """["macromod.mixins.json"]"""
+                    else
+                        "[]"
+                    ),
             "id" to project.property("mod.id"),
             "name" to project.property("mod.name"),
             "version" to project.property("mod.version"),

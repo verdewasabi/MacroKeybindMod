@@ -17,6 +17,7 @@
       }
     ]
   },
+  "mixins": ${macro_mixins},
   "depends": {
     "fabricloader": "${loader_dep}",
     "fabric-language-kotlin": "${flk_dep}",

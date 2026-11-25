@@ -70,10 +70,10 @@ class FabricClientBridge(
         /*return net.minecraft.sounds.SoundEvent.createVariableRangeEvent(net.minecraft.resources.ResourceLocation(id))*/
         //?}
         //? if >=1.21 && <1.21.11 {
-        return net.minecraft.sounds.SoundEvent.createVariableRangeEvent(net.minecraft.resources.ResourceLocation.parse(id))
-        //?}
+        /*return net.minecraft.sounds.SoundEvent.createVariableRangeEvent(net.minecraft.resources.ResourceLocation.parse(id))
+        *///?}
         //? if >=1.21.11 {
-        /*return net.minecraft.sounds.SoundEvent.createVariableRangeEvent(net.minecraft.resources.Identifier.parse(id))*/
+        return net.minecraft.sounds.SoundEvent.createVariableRangeEvent(net.minecraft.resources.Identifier.parse(id))
         //?}
     }
 

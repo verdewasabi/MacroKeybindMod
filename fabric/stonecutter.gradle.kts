@@ -6,7 +6,7 @@
 plugins {
     id("dev.kikugie.stonecutter")
 }
-stonecutter active "1.21.1"
+stonecutter active "1.21.11"
 
 // `./gradlew chiseledBuild` builds every generated :fabric variant (1.21 .. 1.21.11) in one
 // invocation. Stonecutter 0.9.x exposes no built-in chiseled helper, so we aggregate the per

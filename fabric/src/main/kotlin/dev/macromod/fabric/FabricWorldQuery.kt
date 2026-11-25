@@ -80,11 +80,11 @@ class FabricWorldQuery : WorldQuery {
                 val s = inv.getItem(slot)
                 if (!s.isEmpty && matches(itemId(s), term.trim())) {
                     //? if >=1.21.5 {
-                    /*inv.setSelectedSlot(slot)*/
+                    inv.setSelectedSlot(slot)
                     //?}
                     //? if <1.21.5 {
-                    inv.selected = slot
-                    //?}
+                    /*inv.selected = slot
+                    *///?}
                     return true
                 }
             }

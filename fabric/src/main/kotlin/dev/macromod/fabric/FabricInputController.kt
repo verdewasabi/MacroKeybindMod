@@ -170,11 +170,11 @@ class FabricInputController : InputController {
         val inv = player.inventory
         val n = (index - 1).coerceIn(0, 8)
         //? if >=1.21.5 {
-        /*inv.setSelectedSlot(n)*/
+        inv.setSelectedSlot(n)
         //?}
         //? if <1.21.5 {
-        inv.selected = n
-        //?}
+        /*inv.selected = n
+        *///?}
     }
 
     override fun scrollHotbar(delta: Int) {
@@ -182,11 +182,11 @@ class FabricInputController : InputController {
         val inv = player.inventory
         // Math.floorMod gives a correct positive modulus for negative deltas (wrap-around).
         //? if >=1.21.5 {
-        /*inv.setSelectedSlot(Math.floorMod(inv.selectedSlot + delta, 9))*/
+        inv.setSelectedSlot(Math.floorMod(inv.selectedSlot + delta, 9))
         //?}
         //? if <1.21.5 {
-        inv.selected = Math.floorMod(inv.selected + delta, 9)
-        //?}
+        /*inv.selected = Math.floorMod(inv.selected + delta, 9)
+        *///?}
     }
 
     override fun type(text: String) {
@@ -196,11 +196,11 @@ class FabricInputController : InputController {
         val screen = Minecraft.getInstance().screen ?: return
         for (c in text) {
             //? if >=1.21.9 {
-            /*screen.charTyped(net.minecraft.client.input.CharacterEvent(c.code, 0))*/
+            screen.charTyped(net.minecraft.client.input.CharacterEvent(c.code, 0))
             //?}
             //? if <1.21.9 {
-            screen.charTyped(c, 0)
-            //?}
+            /*screen.charTyped(c, 0)
+            *///?}
         }
     }
 
