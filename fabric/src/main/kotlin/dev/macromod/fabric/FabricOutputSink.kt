@@ -3,6 +3,10 @@ package dev.macromod.fabric
 
 import dev.macromod.engine.action.OutputSink
 import net.minecraft.client.Minecraft
+import net.fabricmc.loader.api.FabricLoader
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
+import java.nio.file.LinkOption
 // Text/Component construction is the second most divergent area. From MC 1.19 the text
 // model is the `Component` interface with the static factory `Component.literal(String)`;
 // before 1.19 it was the concrete `TextComponent(String)` constructor. Both live in the
@@ -75,6 +79,59 @@ class FabricOutputSink(private val logger: Logger) : OutputSink {
         /*player.chat(message)*/
         //?}
     }
+
+    //? if >=1.21.11 {
+    override fun logTo(target: String, text: String) {
+        if (!target.endsWith(".txt", ignoreCase = true)) {
+            log("[$target] $text")
+            return
+        }
+
+        if (!target.matches(Regex("[a-zA-Z0-9_-]{1,64}\\.[tT][xX][tT]"))) {
+            log("[LOGTO] Nome de arquivo invalido!")
+            return
+        }
+
+        val reserved = Regex(
+            "(?i)(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])\\.txt"
+        )
+
+        if (target.matches(reserved)) {
+            log("[LOGTO] Nome de arquivo reservado!")
+            return
+        }
+
+        try {
+            val configDir = FabricLoader.getInstance()
+                .configDir.toRealPath()
+
+            val directory = configDir
+                .resolve("macromod")
+                .resolve("logs")
+
+            Files.createDirectories(directory)
+
+            if (directory.toRealPath() != directory) {
+                log("[LOGTO] Diretorio invalido!")
+                return
+            }
+
+            val file = directory.resolve(target)
+
+            Files.writeString(
+                file,
+                text + System.lineSeparator(),
+                Charsets.UTF_8,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND,
+                LinkOption.NOFOLLOW_LINKS
+            )
+        } catch (e: Exception) {
+            log("[LOGTO] Erro ao gravar arquivo!")
+            logger.warn("[LOGTO] Write failed", e)
+        }
+    }
+//?}
 
     override fun log(message: String) {
         val mc = Minecraft.getInstance()
