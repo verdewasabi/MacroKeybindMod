@@ -115,7 +115,54 @@ class FabricClientBridge(
         }
         override fun toast(title: String, description: String) { feedback("[toast] $title $description".trim()) }
         override fun popup(message: String) { Minecraft.getInstance().gui.setOverlayMessage(text(message), false) }
-        override fun openGui(name: String) { feedback("[gui] $name") }
+        override fun openGui(name: String) {
+            //? if >=1.21.11 {
+            val mc = Minecraft.getInstance()
+            val player = mc.player ?: return
+
+            val guiName = name.trim().lowercase()
+
+            when (guiName) {
+                "", "close", "none" -> {
+                    mc.screen?.onClose()
+                }
+
+                "inventory", "inv" -> {
+                    if (mc.screen == null) {
+                        mc.setScreen(
+                            net.minecraft.client.gui.screens
+                                .inventory.InventoryScreen(player)
+                        )
+                    }
+                }
+
+                "chat" -> {
+                    if (mc.screen == null) {
+                        mc.setScreen(
+                            net.minecraft.client.gui.screens
+                                .ChatScreen("", false)
+                        )
+                    }
+                }
+
+                "pause", "menu" -> {
+                    if (mc.screen == null) {
+                        mc.setScreen(
+                            net.minecraft.client.gui.screens
+                                .PauseScreen(true)
+                        )
+                    }
+                }
+
+                else -> {
+                    feedback("[gui] Unknown screen: $name")
+                }
+            }
+            //?}
+            //? if <1.21.11 {
+            /*feedback("[gui] $name")*/
+            //?}
+        }
     }
 
     // Shared chat-filter state (the host's FabricChatFilter): filter()/modify() set state the
