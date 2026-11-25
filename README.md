@@ -44,9 +44,7 @@ Press **F10** to open the macro manager.
 
 Autocomplete currently uses an initial built-in list of commands and keywords. It does not yet provide parameter hints, variable suggestions or complete syntax validation, and may suggest words inside strings or arguments.
 
-### Emergency stop
 
-Press **F12** to stop active macro execution and navigation, release simulated held keys and clear local/shared boolean flags used by scripts. This also clears unrelated boolean flags; non-boolean variables are not deliberately cleared by this operation.
 
 ## Compatibility and requirements
 
